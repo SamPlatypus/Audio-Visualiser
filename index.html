@@ -16,6 +16,18 @@
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
     <link rel="icon" href="./icons/icon-192.png" type="image/png" sizes="192x192" />
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <style>
+      /* Boot guard: until the app has started, keep the page dark and the controls hidden. */
+      html, body { margin: 0; height: 100%; background: #05030c; }
+      body:not(.app-ready) #ui, body:not(.app-ready) #stage { visibility: hidden; }
+      #boot {
+        position: fixed; inset: 0; display: grid; place-items: center; padding: 24px;
+        text-align: center; font: 15px/1.5 system-ui, sans-serif; color: rgba(255, 255, 255, 0.72);
+        animation: boot-show 0.3s 1.2s both;
+      }
+      body.app-ready #boot { display: none; }
+      @keyframes boot-show { from { opacity: 0; } to { opacity: 1; } }
+    </style>
   </head>
   <body class="welcome-open">
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
@@ -194,6 +206,15 @@
         </div>
       </section>
     </div>
+
+    <div id="boot" role="status">Starting Auralis…</div>
+    <script>
+      setTimeout(function () {
+        if (document.body.classList.contains('app-ready')) return;
+        var el = document.getElementById('boot');
+        if (el) el.textContent = 'Auralis couldn\u2019t start in this browser. Try reloading, or open it in an up-to-date Chrome, Safari, Firefox or Edge.';
+      }, 6000);
+    </script>
 
     <input type="file" id="file-input" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.weba,.webm" multiple hidden />
     <script type="module" src="/src/main.ts"></script>

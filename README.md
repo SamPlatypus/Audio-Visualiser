@@ -61,7 +61,9 @@ The top bar and dock are small translucent "glass" panels. They fade out a few s
 
 The app has to be served over **HTTPS** (or from `localhost`), because browsers only allow microphone access and offline caching in a secure context.
 
-1. Build it with `npm run build` and host the `dist/` folder on any static host (GitHub Pages, Netlify, your own server). Paths are relative, so a sub-folder works.
+1. Host the **built** app, not the source files:
+   - **GitHub Pages**: the included workflow (`.github/workflows/deploy-pages.yml`) builds and publishes the app on every push. One-time setup: *Settings → Pages → Build and deployment → Source: **GitHub Actions***. If Pages is left on "Deploy from a branch", it serves the raw source, which browsers can't run; the page then just says Auralis couldn't start.
+   - **Anywhere else**: run `npm run build` and upload the `dist/` folder (Netlify, your own server…). Paths are relative, so a sub-folder works.
 2. Open the address on your phone:
    - **Android (Chrome)**: menu → *Install app* (or *Add to Home screen*).
    - **iPhone (Safari)**: Share → *Add to Home Screen*.

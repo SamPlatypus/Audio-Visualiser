@@ -3,6 +3,7 @@ import { App } from './app';
 import { isNativeShell } from './platform/platform';
 
 const app = new App();
+document.body.classList.add('app-ready');
 
 // Expose for debugging and automated tests.
 (window as unknown as { auralis: App }).auralis = app;
