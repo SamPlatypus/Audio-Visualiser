@@ -8,6 +8,7 @@ import {
   bandsFromSpectrum,
   makeBandLayout,
   smoothK,
+  softClip,
 } from './analysis';
 import { BeatDetector } from './beat';
 import { DemoSynth } from './demo';
@@ -69,6 +70,12 @@ export class AudioEngine extends EventTarget {
     for (const ev of ['play', 'pause', 'ended', 'loadedmetadata', 'emptied']) {
       this.media.addEventListener(ev, () => this.emit());
     }
+    // Decode errors can surface after playback starts (truncated / corrupt files).
+    this.media.addEventListener('error', () => {
+      if (this.source === 'file' && this.media.getAttribute('src')) {
+        this.dispatchEvent(new Event('mediaerror'));
+      }
+    });
     this.frame = {
       time: 0,
       dt: 0,
@@ -251,6 +258,7 @@ export class AudioEngine extends EventTarget {
 
   private resetAnalysis(): void {
     this.beat.reset();
+    this.spectrum.settle();
   }
 
   // ------------------------------------------------------------- transport
@@ -352,8 +360,8 @@ export class AudioEngine extends EventTarget {
         if (f.stereo) {
           const gain = this.waveProc.lastGain;
           for (let i = 0; i < WAVE_SIZE; i++) {
-            f.waveL[i] = clamp(this.timeL[i] * gain);
-            f.waveR[i] = clamp(this.timeR[i] * gain);
+            f.waveL[i] = softClip(this.timeL[i] * gain);
+            f.waveR[i] = softClip(this.timeR[i] * gain);
           }
         }
       }
@@ -417,4 +425,3 @@ export class AudioEngine extends EventTarget {
 }
 
 const SILENCE = new Float32Array(BAND_COUNT).fill(-200);
-const clamp = (v: number) => (v > 1.25 ? 1.25 : v < -1.25 ? -1.25 : v);

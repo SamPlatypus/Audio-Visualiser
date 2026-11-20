@@ -416,6 +416,7 @@ export class Controls {
   // -------------------------------------------------------------- welcome
 
   private setWelcome(show: boolean): void {
+    this.body.classList.toggle('welcome-open', show);
     if (show) {
       this.welcome.hidden = false;
       requestAnimationFrame(() => this.welcome.classList.remove('leaving'));

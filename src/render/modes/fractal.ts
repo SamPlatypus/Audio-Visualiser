@@ -8,7 +8,7 @@ import { GlowSprites, SegmentBatch, TAU, sampleAt } from '../util';
  * Branch angles open with the mids and branches stretch with the bass.
  */
 export function fractalTree(): Visualizer2D {
-  const MAX_DEPTH = 10;
+  const MAX_DEPTH = 9;
   const TRUNKS = 5;
   const cap = TRUNKS * (1 << MAX_DEPTH);
   // Two node buffers (current level / next level).
@@ -32,7 +32,7 @@ export function fractalTree(): Visualizer2D {
     render(g, f, v, th, o) {
       sprites ??= new GlowSprites(16, 48);
       sprites.ensure(th);
-      const depth = v.quality > 0.75 ? 10 : v.quality > 0.5 ? 9 : 8;
+      const depth = v.quality > 0.8 ? 9 : v.quality > 0.5 ? 8 : 7;
       rot += f.dt * (0.04 + f.energy * 0.22);
       const spreadL = 0.3 + f.mid * 0.75 + 0.05 * Math.sin(f.time * 0.5);
       const spreadR = 0.3 + f.mid * 0.75 + 0.05 * Math.cos(f.time * 0.43);
@@ -89,7 +89,7 @@ export function fractalTree(): Visualizer2D {
         const val = sampleAt(f.bands, t * 0.9);
         const lw = Math.max(0.7 * v.px, (depth - d) * 0.5 * v.px * (1 + val * 1.6));
         g.strokeStyle = th.color(t);
-        if (o.glow && d < depth - 2) {
+        if (o.glow && d < depth - 3) {
           g.globalAlpha = 0.12;
           g.lineWidth = lw * 3.5;
           levels[d].strokeAll(g);
@@ -101,7 +101,7 @@ export function fractalTree(): Visualizer2D {
 
       // Blossoms at the branch tips, sized by the treble.
       const tips = n;
-      const step = tips > 600 ? 2 : 1;
+      const step = Math.max(1, Math.ceil(tips / 360));
       const bloom = (2 + f.treble * 16 + f.beat * 6 * o.beatReact) * v.px;
       g.globalAlpha = 0.3 + f.treble * 0.7;
       const bucket = sprites.bucketFor(1);
@@ -126,27 +126,30 @@ void main() {
   vec2 z = mat2(cs, -sn, sn, cs) * uv * uZoom;
   float n = 0.0;
   float trap = 1e9;
-  for (int i = 0; i < 160; i++) {
+  float d2 = 0.0;
+  for (int i = 0; i < 200; i++) {
     if (i >= uIter) break;
     z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + uC;
-    float d = dot(z, z);
-    trap = min(trap, abs(z.x * z.y));
-    if (d > 256.0) break;
+    d2 = dot(z, z);
+    trap = min(trap, d2);
+    if (d2 > 256.0) break;
     n += 1.0;
   }
   float r = length(uv);
-  vec3 bg = uBg * (1.0 - 0.6 * r);
+  vec3 bg = uBg * (1.0 - 0.55 * r);
+  vec3 col;
   if (n >= float(uIter)) {
-    // Interior: dark, softly tinted by the orbit trap.
-    vec3 c = pal(0.0) * (0.12 + 0.35 * exp(-trap * 18.0)) * uGlow;
-    gl_FragColor = vec4(bg + c, 1.0);
-    return;
+    // Inside the set: deep colour banded by the orbit trap.
+    float t = sqrt(trap);
+    col = pal(0.1 + t * 0.6) * (0.18 + 0.5 * smoothstep(0.9, 0.0, t)) * (0.7 + 0.6 * uBeat);
+  } else {
+    // Outside: smooth escape count, glowing towards the boundary.
+    float mu = n + 1.0 - log2(max(1e-6, log2(d2) * 0.5));
+    float glow = pow(clamp(mu / 26.0, 0.0, 1.0), 1.5);
+    col = pal(mu * 0.03 + uTime * 0.02) * glow * 1.25;
+    col += vec3(1.0) * pow(glow, 8.0) * 0.35 * (0.6 + uBeat);
   }
-  float mu = n + 1.0 - log2(log2(dot(z, z)) * 0.5);
-  float t = mu / float(uIter);
-  vec3 col = pal(mu * 0.045 + uTime * 0.02);
-  float bright = pow(clamp(t * 1.6, 0.0, 1.0), 0.7) * (0.75 + 0.5 * uBeat);
-  gl_FragColor = vec4(bg + col * bright * uGlow, 1.0);
+  gl_FragColor = vec4(bg + col * uGlow, 1.0);
 }
 `;
 
@@ -168,18 +171,23 @@ export function juliaSet(): VisualizerGL {
     },
     render(gl, f, v, th, o) {
       if (!pass) return;
-      phase += f.dt * (0.06 + f.energy * 0.22);
+      phase += f.dt * (0.05 + f.energy * 0.16);
       rot += f.dt * (0.03 + f.mid * 0.12);
-      // c travels near the main cardioid edge where Julia sets are most intricate.
-      const a = phase + f.bass * 0.35;
-      const rad = 0.7885 + f.beat * 0.012 * o.beatReact - f.treble * 0.02;
+      // c rides the main cardioid of the Mandelbrot set, where Julia sets are
+      // connected and most intricate. Bass and beats push it just outside, so
+      // the fractal splinters and re-forms with the music.
+      const ca = Math.cos(phase);
+      const sa = Math.sin(phase);
+      const cx = 0.5 * ca - 0.25 * (ca * ca - sa * sa);
+      const cy = 0.5 * sa - 0.25 * (2 * sa * ca);
+      const k = 0.985 + f.bass * 0.035 + f.beat * 0.025 * o.beatReact;
       const p = pass.begin(gl, v.w, v.h, f.time, th);
-      p.f2('uC', rad * Math.cos(a), rad * Math.sin(a));
-      p.f1('uZoom', 2.6 - f.bass * 0.5 - f.beat * 0.15 * o.beatReact);
+      p.f2('uC', cx * k, cy * k);
+      p.f1('uZoom', 3.1 - f.bass * 0.45 - f.beat * 0.15 * o.beatReact);
       p.f1('uRot', rot);
-      p.f1('uGlow', 0.8 + f.energy * 0.8);
+      p.f1('uGlow', 0.85 + f.energy * 0.6);
       p.f1('uBeat', f.beat * o.beatReact);
-      p.i1('uIter', Math.round(56 + 72 * v.quality));
+      p.i1('uIter', Math.round(64 + 96 * v.quality));
       pass.draw();
     },
     dispose() {
@@ -194,30 +202,43 @@ uniform float uSeg;
 uniform float uRot;
 uniform float uZoom;
 uniform vec2 uK;
+uniform float uTwist;
 uniform float uGlow;
 uniform float uBass;
+uniform float uBeat;
 uniform int uIter;
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / min(uRes.x, uRes.y);
   float r = length(uv);
+  // Kaleidoscope: fold the plane into mirrored wedges.
   float a = atan(uv.y, uv.x) + uRot;
   float seg = 6.2831853 / uSeg;
   a = mod(a, seg);
   a = abs(a - seg * 0.5);
   vec2 p = vec2(cos(a), sin(a)) * r * uZoom;
-  float acc = 0.0;
-  float trap = 1e9;
-  for (int i = 0; i < 24; i++) {
+  // Kaleidoscopic IFS: fold, rotate, scale. Each level adds glowing
+  // filaments; deeper (finer) levels are dimmer so the structure reads clearly.
+  float cs = cos(uTwist), sn = sin(uTwist);
+  mat2 m = mat2(cs, -sn, sn, cs);
+  float px = uZoom / min(uRes.x, uRes.y);
+  float scale = 1.0;
+  float weight = 1.0;
+  vec3 col = vec3(0.0);
+  for (int i = 0; i < 12; i++) {
     if (i >= uIter) break;
-    p = abs(p) / dot(p, p) - uK;
-    float l = length(p);
-    trap = min(trap, l);
-    acc += exp(-l * 3.0);
+    p = abs(p) - uK;
+    p = m * p;
+    p *= 1.5;
+    scale *= 1.5;
+    float dl = abs(p.y) / scale;
+    float dr = abs(length(p) - 0.8) / scale;
+    float lines = exp(-dl / (px * 1.4 + 0.0008));
+    float rings = exp(-dr / (px * 2.0 + 0.001));
+    col += pal(float(i) * 0.13 + r * 0.45 - uTime * 0.025) * (lines + rings * 0.45) * weight;
+    weight *= 0.66;
   }
-  float glow = exp(-trap * 4.0);
-  vec3 col = pal(acc * 0.11 + r * 0.6 - uTime * 0.03) * (acc * 0.16 + glow * 0.9);
-  col *= uGlow * smoothstep(1.25, 0.0, r);
-  col += pal(0.0) * uBass * 0.25 * exp(-r * 6.0);
+  col += pal(0.0) * exp(-r * 5.0) * (0.12 + uBass * 0.45);
+  col *= uGlow * (0.8 + 0.4 * uBeat) * smoothstep(1.4, 0.2, r);
   gl_FragColor = vec4(uBg * (1.0 - 0.6 * r) + col, 1.0);
 }
 `;
@@ -240,16 +261,18 @@ export function kaleido(): VisualizerGL {
     },
     render(gl, f, v, th, o) {
       if (!pass) return;
-      rot += f.dt * (0.05 + f.energy * 0.35);
-      drift += f.dt * (0.04 + f.mid * 0.12);
+      rot += f.dt * (0.04 + f.energy * 0.3);
+      drift += f.dt * (0.05 + f.mid * 0.15);
       const p = pass.begin(gl, v.w, v.h, f.time, th);
-      p.f1('uSeg', 8);
+      p.f1('uSeg', 6);
       p.f1('uRot', rot);
-      p.f1('uZoom', 1.9 - f.bass * 0.45 - f.beat * 0.2 * o.beatReact);
-      p.f2('uK', 0.78 + 0.08 * Math.sin(drift) + f.mid * 0.1, 0.56 + 0.07 * Math.cos(drift * 0.7) + f.treble * 0.08);
-      p.f1('uGlow', 0.75 + f.energy * 0.9);
+      p.f1('uZoom', 2.4 - f.bass * 0.5 - f.beat * 0.2 * o.beatReact);
+      p.f2('uK', 0.62 + 0.12 * Math.sin(drift) + f.mid * 0.12, 0.42 + 0.1 * Math.cos(drift * 0.73) + f.treble * 0.1);
+      p.f1('uTwist', 0.35 + 0.25 * Math.sin(drift * 0.41) + f.bass * 0.2);
+      p.f1('uGlow', 0.8 + f.energy * 0.8);
       p.f1('uBass', f.bass);
-      p.i1('uIter', Math.round(10 + 8 * v.quality));
+      p.f1('uBeat', f.beat * o.beatReact);
+      p.i1('uIter', Math.round(6 + 3 * v.quality));
       pass.draw();
     },
     dispose() {

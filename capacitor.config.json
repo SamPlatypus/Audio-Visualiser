@@ -1,0 +1,14 @@
+{
+  "appId": "app.auralis.visualizer",
+  "appName": "Auralis",
+  "webDir": "dist",
+  "backgroundColor": "#05030c",
+  "android": {
+    "backgroundColor": "#05030c",
+    "allowMixedContent": false
+  },
+  "ios": {
+    "backgroundColor": "#05030c",
+    "contentInset": "never"
+  }
+}

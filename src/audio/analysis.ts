@@ -127,6 +127,8 @@ export class SpectrumProcessor {
   fixedCeilingDb = -24;
   /** Auto-level reference (tracks recent loud band level). */
   reference = -40;
+  /** Seconds of fast auto-level adaptation left (after a new source starts). */
+  private settleTime = 2;
 
   private tilt: Float32Array;
   private peakVel: Float32Array;
@@ -179,9 +181,12 @@ export class SpectrumProcessor {
     }
     if (autoLevel) {
       if (frameMax > this.reference) this.reference += (frameMax - this.reference) * smoothK(dt, 0.08);
-      else this.reference -= 5 * dt; // fall 5 dB per second
-      // Never chase the noise floor: silence should look like silence.
-      this.reference = Math.min(0, Math.max(-52, this.reference));
+      // Fall 5 dB/s normally (no pumping), much faster while settling on a new source.
+      else this.reference -= (this.settleTime > 0 ? 30 : 5) * dt;
+      if (this.settleTime > 0) this.settleTime -= dt;
+      // Never chase the noise floor: silence should look like silence. -62 dB
+      // still lets distant music picked up by a phone mic fill the screen.
+      this.reference = Math.min(0, Math.max(-62, this.reference));
     }
 
     const gainDb = 20 * Math.log10(Math.max(0.05, sensitivity));
@@ -229,6 +234,11 @@ export class SpectrumProcessor {
     f.energy += (energy - f.energy) * kf;
   }
 
+  /** Adapt the auto level quickly for the next couple of seconds (new source). */
+  settle(): void {
+    this.settleTime = 2;
+  }
+
   /** Mean of the raw (instant) bass bands — used for beat detection. */
   rawBass(): number {
     return average(this.raw, 0, Math.max(1, this.bassEnd));
@@ -252,36 +262,35 @@ function average(a: Float32Array, from: number, to: number): number {
 }
 
 /**
- * Normalises a time-domain waveform for display. With auto level on, quiet
- * inputs are boosted so the waveform stays readable; sensitivity scales it.
+ * Normalises a time-domain waveform for display. With auto level on, the
+ * gain follows the signal's RMS (not its peak, which a single kick drum
+ * would dominate) and a soft tanh saturation keeps transients on screen
+ * without hard clipping. Sensitivity scales the result.
  */
 export class WaveformProcessor {
-  /** Recent peak amplitude (slow release). */
-  peak = 0.25;
+  /** Smoothed RMS of recent input. */
+  rms = 0.1;
   /** Gain applied on the most recent call (reused for the stereo channels). */
   lastGain = 1;
 
   process(input: Float32Array, out: Float32Array, dt: number, settings: SpectrumSettings): number {
-    let p = 0;
     let sum = 0;
-    for (let i = 0; i < input.length; i++) {
-      const s = input[i];
-      const a = s < 0 ? -s : s;
-      if (a > p) p = a;
-      sum += s * s;
-    }
-    if (p > this.peak) this.peak += (p - this.peak) * smoothK(dt, 0.05);
-    else this.peak += (p - this.peak) * smoothK(dt, 1.5);
+    for (let i = 0; i < input.length; i++) sum += input[i] * input[i];
+    const rms = Math.sqrt(sum / Math.max(1, input.length));
+    // Fast to rise, slow to fall, so loud passages don't pump.
+    this.rms += (rms - this.rms) * smoothK(dt, rms > this.rms ? 0.08 : 0.8);
 
-    const auto = settings.autoLevel ? 0.75 / Math.max(0.04, this.peak) : 1;
-    const gain = Math.min(24, auto * settings.sensitivity);
+    const auto = settings.autoLevel ? 0.38 / Math.max(0.012, this.rms) : 1.6;
+    const gain = Math.min(40, auto * settings.sensitivity);
     this.lastGain = gain;
-    for (let i = 0; i < input.length; i++) {
-      const v = input[i] * gain;
-      out[i] = v > 1.25 ? 1.25 : v < -1.25 ? -1.25 : v;
-    }
-    return Math.sqrt(sum / Math.max(1, input.length));
+    for (let i = 0; i < input.length; i++) out[i] = softClip(input[i] * gain);
+    return rms;
   }
+}
+
+/** Smooth saturation into roughly ±1.1. */
+export function softClip(v: number): number {
+  return 1.1 * Math.tanh(v);
 }
 
 /** Index of the first rising zero crossing, for a stable oscilloscope trace. */

@@ -73,6 +73,7 @@ export class App {
 
     this.engine.addEventListener('change', () => this.onEngineChange());
     this.engine.media.addEventListener('ended', () => this.onTrackEnded());
+    this.engine.addEventListener('mediaerror', () => this.onMediaError());
     this.onEngineChange();
 
     attachGestures(
@@ -249,6 +250,12 @@ export class App {
     if (this.engine.source === 'file' && this.trackIndex < this.playlist.length - 1) {
       void this.playTrack(this.trackIndex + 1);
     }
+  }
+
+  private onMediaError(): void {
+    const name = this.playlist[this.trackIndex]?.name ?? 'This file';
+    this.controls.message(`“${name}” can’t be played on this device.`, { error: true });
+    if (this.trackIndex < this.playlist.length - 1) void this.playTrack(this.trackIndex + 1);
   }
 
   private clearPlaylist(): void {

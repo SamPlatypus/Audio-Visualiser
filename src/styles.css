@@ -121,6 +121,12 @@ body.ui-hidden .dock {
 body.ui-hidden {
   cursor: none;
 }
+/* The welcome card offers the sources itself, so the dock waits until one is picked. */
+body.welcome-open .dock {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 14px);
+}
 
 .glass {
   background: var(--glass);
@@ -870,8 +876,8 @@ input[type='range']::-moz-range-thumb {
   margin-top: 2px;
 }
 .toast.msg {
-  top: auto;
-  bottom: calc(120px + var(--safe-b));
+  /* Under the top bar, clear of the dock and any open sheet. */
+  top: calc(60px + var(--safe-t));
   max-width: calc(100% - 32px);
   white-space: normal;
   font-size: 14px;

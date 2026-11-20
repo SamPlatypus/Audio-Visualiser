@@ -155,11 +155,13 @@ export function lissajous(): Visualizer2D {
       const L = f.waveL;
       const R = f.waveR;
       const n = L.length;
-      const scale = v.u * 0.4 * (1 + f.beat * 0.06 * o.beatReact);
+      // Mid/side sums can reach ~1.5, mono phase plots ~1.1: scale so both fit.
+      const scale = v.u * (f.stereo ? 0.34 : 0.48) * (1 + f.beat * 0.06 * o.beatReact);
       rot += f.dt * (0.05 + f.energy * 0.2);
       const cr = Math.cos(rot);
       const sr = Math.sin(rot);
-      const delay = 28;
+      // Phase-portrait delay (~1 ms): opens tonal content into loops.
+      const delay = 48;
       const step = v.quality > 0.6 ? 1 : 2;
       batch.reset();
       let px = 0;

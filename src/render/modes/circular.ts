@@ -160,8 +160,8 @@ export function polarBloom(): Visualizer2D {
     render(g, f, v, th, o) {
       rot += f.dt * (0.04 + f.energy * 0.35);
       const petals = 6;
-      const base = v.u * 0.13 * (1 + f.beat * 0.12 * o.beatReact);
-      const amp = v.u * 0.3;
+      const base = v.u * 0.16 * (1 + f.beat * 0.12 * o.beatReact);
+      const amp = v.u * 0.34;
       g.globalCompositeOperation = 'lighter';
       g.lineJoin = 'round';
       for (let l = 0; l < layers.length; l++) {

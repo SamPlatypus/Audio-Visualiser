@@ -165,7 +165,10 @@ export class Renderer {
     if (next === this.mode && !this.pending) return;
     if (next.kind === 'gl' && !this.glAvailable) return;
     if (crossfade) this.pending = next;
-    else this.activate(next);
+    else {
+      this.pending = null;
+      this.activate(next);
+    }
   }
 
   private activate(next: Visualizer): void {
