@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>Auralis</title>
+    <meta name="description" content="Offline music visualizer for your microphone or your own audio files." />
+    <meta name="theme-color" content="#05030c" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Auralis" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="./icons/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" fill="currentColor"/></symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></symbol>
+        <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6 6v12M18 6.8v10.4a.8.8 0 0 1-1.25.66L9.4 12.66a.8.8 0 0 1 0-1.32l7.35-5.2A.8.8 0 0 1 18 6.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-next" viewBox="0 0 24 24"><path d="M18 6v12M6 6.8v10.4a.8.8 0 0 0 1.25.66l7.35-5.2a.8.8 0 0 0 0-1.32L7.25 6.14A.8.8 0 0 0 6 6.8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-mic" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></g></symbol>
+        <symbol id="i-file" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></g></symbol>
+        <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12h2l2-6 3 12 3-15 3 15 2-6h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-modes" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/></g></symbol>
+        <symbol id="i-palette" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2a1.7 1.7 0 0 1 1.3-2.8H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3Z" stroke-linejoin="round"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="7.3" r="1.2" fill="currentColor" stroke="none"/></g></symbol>
+        <symbol id="i-gain" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18c3-1 5-4 6-8M14 18c2-1 3-3 3.5-5M20 18v-.5"/><path d="M3 21h18"/></g></symbol>
+        <symbol id="i-settings" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></g></symbol>
+        <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M9 4v4a1 1 0 0 1-1 1H4M20 9h-4a1 1 0 0 1-1-1V4M15 20v-4a1 1 0 0 1 1-1h4M4 15h4a1 1 0 0 1 1 1v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+        <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+      </defs>
+    </svg>
+
+    <main id="stage" aria-label="Visualizer. Tap to show controls, swipe left or right to change visualizer, swipe up or down to change colours, double-tap for fullscreen.">
+      <canvas id="cgl" aria-hidden="true"></canvas>
+      <canvas id="c2d" aria-hidden="true"></canvas>
+      <canvas id="cfade" aria-hidden="true"></canvas>
+    </main>
+
+    <div id="ui">
+      <header class="topbar fades">
+        <button class="chip" id="btn-mode-chip" aria-label="Choose visualizer">
+          <span id="mode-name">Radial</span><span class="chip-sub" id="mode-cat">Circular</span>
+        </button>
+        <div class="spacer"></div>
+        <button class="icon-btn" id="btn-settings" aria-label="Settings"><svg><use href="#i-settings" /></svg></button>
+        <button class="icon-btn" id="btn-fullscreen" aria-label="Fullscreen"><svg><use href="#i-expand" /></svg></button>
+      </header>
+
+      <div class="stats" id="stats" hidden></div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+      <section class="welcome" id="welcome" aria-labelledby="welcome-title">
+        <div class="welcome-card">
+          <div class="logo" aria-hidden="true"></div>
+          <h1 id="welcome-title">Auralis</h1>
+          <p class="lede">See your music. Choose a sound source to begin.</p>
+          <div class="welcome-actions">
+            <button class="big-btn" data-action="mic"><svg><use href="#i-mic" /></svg><span><b>Microphone</b><small>React to music around you</small></span></button>
+            <button class="big-btn" data-action="file"><svg><use href="#i-file" /></svg><span><b>Audio files</b><small>Play tracks from this device</small></span></button>
+            <button class="big-btn" data-action="demo"><svg><use href="#i-wave" /></svg><span><b>Demo beat</b><small>A built-in synth loop</small></span></button>
+          </div>
+          <p class="hint">Tap the screen to show controls · Swipe ←→ to change visualizer · Swipe ↑↓ for colours · Double-tap for fullscreen</p>
+          <p class="fineprint">Works offline. Your audio never leaves this device.</p>
+        </div>
+      </section>
+
+      <footer class="dock fades" id="dock">
+        <div class="track" id="track" hidden>
+          <div class="track-info">
+            <span class="track-title" id="track-title"></span>
+            <span class="track-time" id="track-time"></span>
+          </div>
+          <input type="range" id="seek" class="seek" min="0" max="1000" step="1" value="0" aria-label="Seek" />
+        </div>
+        <div class="dock-row">
+          <button class="icon-btn" id="btn-source" aria-label="Sound source"><svg><use href="#i-mic" /></svg><span class="live-dot" aria-hidden="true"></span></button>
+          <button class="icon-btn" id="btn-prev" aria-label="Previous track"><svg><use href="#i-prev" /></svg></button>
+          <button class="icon-btn primary" id="btn-play" aria-label="Play"><svg><use href="#i-play" /></svg></button>
+          <button class="icon-btn" id="btn-next" aria-label="Next track"><svg><use href="#i-next" /></svg></button>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <button class="icon-btn" id="btn-modes" aria-label="Visualizers"><svg><use href="#i-modes" /></svg></button>
+          <button class="icon-btn" id="btn-themes" aria-label="Colour themes"><svg><use href="#i-palette" /></svg></button>
+          <button class="icon-btn" id="btn-sens" aria-label="Sensitivity"><svg><use href="#i-gain" /></svg></button>
+        </div>
+      </footer>
+
+      <div class="popover" id="pop-sens" role="dialog" aria-label="Sensitivity" hidden>
+        <div class="pop-head"><span>Sensitivity</span><output id="sens-value">1.0×</output></div>
+        <input type="range" id="sens" min="0" max="1000" step="1" aria-label="Sensitivity" />
+        <div class="meter" aria-hidden="true"><div class="meter-fill" id="meter-fill"></div></div>
+        <label class="row-toggle"><span>Auto level</span><button class="switch" role="switch" id="sens-auto" aria-checked="true" aria-label="Auto level"></button></label>
+      </div>
+
+      <div class="scrim" id="scrim" hidden></div>
+
+      <section class="sheet" id="sheet-modes" role="dialog" aria-label="Visualizers" hidden>
+        <div class="grabber" aria-hidden="true"></div>
+        <div class="sheet-head"><h2>Visualizer</h2><button class="icon-btn small" data-close aria-label="Close"><svg><use href="#i-close" /></svg></button></div>
+        <p class="sheet-blurb" id="mode-blurb"></p>
+        <div id="mode-groups"></div>
+        <div class="field">
+          <span class="field-label">Auto-cycle</span>
+          <div class="seg" id="seg-autocycle" role="radiogroup" aria-label="Auto-cycle visualizers">
+            <button data-value="off">Off</button><button data-value="15">15s</button><button data-value="30">30s</button><button data-value="60">60s</button><button data-value="beat">On drops</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="sheet" id="sheet-themes" role="dialog" aria-label="Colour themes" hidden>
+        <div class="grabber" aria-hidden="true"></div>
+        <div class="sheet-head"><h2>Colours</h2><button class="icon-btn small" data-close aria-label="Close"><svg><use href="#i-close" /></svg></button></div>
+        <div class="theme-grid" id="theme-grid"></div>
+        <div class="field">
+          <label class="field-label" for="cycle">Colour cycling <output id="cycle-value"></output></label>
+          <input type="range" id="cycle" min="0" max="100" step="1" />
+        </div>
+      </section>
+
+      <section class="sheet" id="sheet-source" role="dialog" aria-label="Sound source" hidden>
+        <div class="grabber" aria-hidden="true"></div>
+        <div class="sheet-head"><h2>Sound source</h2><button class="icon-btn small" data-close aria-label="Close"><svg><use href="#i-close" /></svg></button></div>
+        <div class="source-grid">
+          <button class="source-btn" data-action="mic"><svg><use href="#i-mic" /></svg>Microphone</button>
+          <button class="source-btn" data-action="file"><svg><use href="#i-file" /></svg>Add files</button>
+          <button class="source-btn" data-action="demo"><svg><use href="#i-wave" /></svg>Demo beat</button>
+          <button class="source-btn" data-action="stop"><svg><use href="#i-stop" /></svg>Stop</button>
+        </div>
+        <div class="playlist-head" id="playlist-head" hidden><span>Playlist</span><button class="text-btn" id="btn-clear-list">Clear</button></div>
+        <ol class="playlist" id="playlist"></ol>
+      </section>
+
+      <section class="sheet tall" id="sheet-settings" role="dialog" aria-label="Settings" hidden>
+        <div class="grabber" aria-hidden="true"></div>
+        <div class="sheet-head"><h2>Settings</h2><button class="icon-btn small" data-close aria-label="Close"><svg><use href="#i-close" /></svg></button></div>
+
+        <h3>Audio</h3>
+        <div class="field">
+          <label class="field-label" for="set-sens">Sensitivity <output id="set-sens-value"></output></label>
+          <input type="range" id="set-sens" min="0" max="1000" step="1" />
+        </div>
+        <label class="row-toggle"><span>Auto level <small>Keeps quiet and loud music filling the screen</small></span><button class="switch" role="switch" id="set-auto" aria-label="Auto level"></button></label>
+        <div class="field">
+          <label class="field-label" for="set-smooth">Smoothing <output id="set-smooth-value"></output></label>
+          <input type="range" id="set-smooth" min="0" max="100" step="1" />
+        </div>
+
+        <h3>Visuals</h3>
+        <div class="field">
+          <label class="field-label" for="set-trails">Motion trails <output id="set-trails-value"></output></label>
+          <input type="range" id="set-trails" min="0" max="100" step="1" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="set-beat">Beat reaction <output id="set-beat-value"></output></label>
+          <input type="range" id="set-beat" min="0" max="100" step="1" />
+        </div>
+        <label class="row-toggle"><span>Glow</span><button class="switch" role="switch" id="set-glow" aria-label="Glow"></button></label>
+
+        <h3>Performance</h3>
+        <div class="field">
+          <span class="field-label">Quality</span>
+          <div class="seg" id="seg-quality" role="radiogroup" aria-label="Quality">
+            <button data-value="auto">Auto</button><button data-value="high">High</button><button data-value="balanced">Balanced</button><button data-value="saver">Battery</button>
+          </div>
+        </div>
+        <label class="row-toggle"><span>Show stats <small>Frame rate, render scale and tempo</small></span><button class="switch" role="switch" id="set-stats" aria-label="Show stats"></button></label>
+
+        <h3>Controls</h3>
+        <div class="field">
+          <label class="field-label" for="set-hide">Hide controls after <output id="set-hide-value"></output></label>
+          <input type="range" id="set-hide" min="15" max="100" step="5" />
+        </div>
+        <label class="row-toggle"><span>Keep screen awake</span><button class="switch" role="switch" id="set-awake" aria-label="Keep screen awake"></button></label>
+
+        <h3>Help</h3>
+        <ul class="help">
+          <li><b>Tap</b> show / hide controls</li>
+          <li><b>Swipe ← →</b> change visualizer</li>
+          <li><b>Swipe ↑ ↓</b> change colours</li>
+          <li><b>Double-tap</b> fullscreen</li>
+          <li class="kbd-only"><b>Keyboard</b> Space play/pause · ←→ visualizer · ↑↓ colours · +/− sensitivity · F fullscreen · H hide controls · M microphone · O open files</li>
+        </ul>
+        <div class="about">
+          <span id="offline-status">Checking offline support…</span>
+          <button class="text-btn" id="btn-reset">Reset settings</button>
+        </div>
+      </section>
+    </div>
+
+    <input type="file" id="file-input" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.weba,.webm" multiple hidden />
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
